@@ -7,12 +7,12 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
  */
 
 contract Verification is Ownable {
-    enum VerifierStatus {inactive, blocked, active}
-    enum VotingState {added, started, ended}
+
+    enum VerifierStatus {blocked, inactive, active}
 
     struct Verifier { //@todo: verifier struct should be callable from different contract
         uint8 rating; // rating 0 - 100
-        uint256 stake;
+        //uint256 stake;
         VerifierStatus status;
         bool instantiated;
         mapping(uint16 => bool) votings;
@@ -22,58 +22,42 @@ contract Verification is Ownable {
     struct Voting{
         uint256 votingStart;
         uint256 votingEnd;
-        uint8 minimumVotes;
+        uint8 quorum;
         //uint256 stake;
-        uint8 yesVotes; //todo: should be encrypted
+        uint8 yesVotes;
         uint8 totalVotes;
-        bool accepted;
-        VotingState state;
+        //bool accepted;
+        //VotingState state;
         uint reward;
-        mapping(address => bool) yesVote;
+        mapping(address => bool) yesVote; //rename
 
     }
+    event VotingAdded(uint16 votingID);
 
-    uint16 votingsNum;
-    mapping(uint16 => Voting) votings;
+
+    string public adminName;
+
+    mapping(address => Verifier) public verifiers; //@todo: id or other pattern should be applied to retrieve all verifiers
+    uint256 public numVerifiers;
+
+    uint16 public votingsNum;
+    mapping(uint16 => Voting) public votings;
 
     modifier inVotingPeriod(uint16 _votingID) {
         require(block.timestamp >= votings[_votingID].votingStart, "Voting hasn't started yet");
         require(block.timestamp <= votings[_votingID].votingEnd, "Voting has ended");
         _;
     }
+
+    modifier afterVotingPeriod(uint16 _votingID){
+        require(block.timestamp > votings[_votingID].votingEnd, "Voting hasn't ended yet");
+        _;
+    }
+
     modifier onlyActiveVerifier(){
         require(verifiers[msg.sender].status == VerifierStatus.active, "You are not an active verifier!");
         _;
     }
-
-    function addVoting(uint256 _votingStart, uint256 _votingEnd, uint8 _minimumVotes)
-        public
-        onlyOwner //@todo: change to Donation Smart-Contract
-        payable
-        returns (uint16 votingID)
-        {
-            votingID = votingsNum++;
-            votings[votingID] = Voting(_votingStart, _votingEnd, _minimumVotes, 0, 0,false, VotingState.added, msg.value);
-            votings[votingID].reward = msg.value;
-        }
-
-    function castVote(uint16 _votingID, bool _yesVote)
-        public
-        onlyActiveVerifier()
-        inVotingPeriod(_votingID)
-        {
-            require(verifiers[msg.sender].votings[_votingID], "Already voted");
-            votings[_votingID].yesVote[msg.sender] = _yesVote;
-            if(_yesVote) {votings[_votingID].yesVotes += 1;}
-            votings[_votingID].totalVotes += 1;
-        }
-
-
-    string public adminName;
-    mapping(address => Verifier) public verifiers; //@todo: id or other pattern should be applied to retrieve all verifiers
-    uint256 public numVerifiers;
-
-
 
     constructor (string memory _adminName, address[] memory _verifiers) public {
         adminName = _adminName;
@@ -86,13 +70,74 @@ contract Verification is Ownable {
         }
     }
 
-    function modifyVerifier(address _id, uint8 _rating, uint256 _stake, VerifierStatus _status)
+    function addVoting(uint256 _votingStart, uint256 _votingEnd, uint8 _quorum)
+        public
+        onlyOwner //@todo: change to Donation Smart-Contract
+        payable
+        {
+            require(_quorum>0 && _quorum<numVerifiers, "quorum set too low or high");
+            require(_quorum%2 == 0, "Only odd quorum allowed");
+            votingsNum++;
+            uint16 votingID = votingsNum;
+            votings[votingID] = Voting(_votingStart, _votingEnd, _quorum, 0, 0, msg.value);
+            votings[votingID].reward = msg.value;
+            emit VotingAdded(votingID);
+        }
+
+    function castVote(uint16 _votingID, bool _yesVote)
+        public
+        onlyActiveVerifier()
+        inVotingPeriod(_votingID)
+        {
+            require(!verifiers[msg.sender].votings[_votingID], "Already voted");
+            verifiers[msg.sender].votings[_votingID] = true;
+            votings[_votingID].yesVote[msg.sender] = _yesVote;
+            if(_yesVote) {votings[_votingID].yesVotes += 1;}
+            votings[_votingID].totalVotes += 1;
+        }
+
+    function readVotingResults(uint16 _votingID)
+        public
+        view
+        afterVotingPeriod(_votingID)
+        returns(bool)
+        {
+            Voting storage voting = votings[_votingID];
+
+            if((voting.totalVotes-voting.yesVotes) < voting.yesVotes){
+                return true; // voting accepted
+            } else {
+                return false; // voting rejected
+            }
+        }
+
+    function readVotingStatus(uint16 _votingID)
+        public
+        view
+        returns(bytes32)
+        {
+            if(votings[_votingID].votingStart == 0) {return "invalid votingID";}
+
+            if (block.timestamp < votings[_votingID].votingStart){
+                return "not started yet";
+            } else
+            if(block.timestamp >= votings[_votingID].votingStart && block.timestamp <= votings[_votingID].votingEnd){
+                return "started";
+            } else {
+                return "ended";
+            }
+
+        }
+        
+
+
+    function modifyVerifier(address _id, uint8 _rating, VerifierStatus _status)
         public
         onlyOwner
         {
-            if(!(verifiers[_id].instantiated)){numVerifiers += 1; verifiers[_id].instantiated = true;}
+            if(!(verifiers[_id].instantiated) && _status == VerifierStatus.active){numVerifiers += 1; verifiers[_id].instantiated = true;}
             verifiers[_id].rating = _rating;
-            verifiers[_id].stake = _stake;
+            //verifiers[_id].stake = _stake;
             verifiers[_id].status = _status;
 
         }
@@ -100,11 +145,37 @@ contract Verification is Ownable {
     function readVerifierStatus(address _verifier)
         public
         view
-        returns(VerifierStatus)
+        returns(bytes32) //aktualisieren..
         {
-            return(verifiers[_verifier].status);
+            if (verifiers[_verifier].status == VerifierStatus.blocked) {
+                return "blocked";
+            } else if (verifiers[_verifier].status == VerifierStatus.active){
+                    return "active";
+                } else {
+                        return "inactive";
+                }
         }
 
+    function getVerifierVotingSpecified(address _verifier, uint16 _votingID)
+        public
+        view
+        returns (uint8, VerifierStatus, bool, bool)
+        {
+            return(
+                verifiers[_verifier].rating,
+                verifiers[_verifier].status,
+                verifiers[_verifier].instantiated,
+                verifiers[_verifier].votings[_votingID]
+                );
+
+        }
+
+    function deleteContract()
+        public
+        onlyOwner
+        {
+            selfdestruct(msg.sender);
+        }
     /*
     pragma experimental ABIEncoderV2 needed for returning structs
     function getVerifier(address _id)
