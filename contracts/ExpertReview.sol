@@ -8,7 +8,6 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract ExpertReview is Ownable {
     enum ExpertStatus {verified, restricted, blocked}
-    enum VotingState {planned, started, ended}
     enum EPMState {started, inactive, proposed}
 
     struct Expert {
@@ -22,11 +21,10 @@ contract ExpertReview is Ownable {
     struct Voting {
         uint256 votingStart;
         uint256 votingEnd;
-        uint8 minimumVotes;
+        uint8 quorum;
         uint8 totalVotes;
         uint8 yesVotes;
         bool accepted;
-        VotingState state;
         mapping(address => bool) yesVote;
 
     }
@@ -53,6 +51,12 @@ contract ExpertReview is Ownable {
         require(block.timestamp <= votings[_votingID].votingEnd, "Voting has ended");
         _;
     }
+
+    modifier afterVotingPeriod(uint16 _votingID){
+        require(block.timestamp > votings[_votingID].votingEnd, "Voting hasn't ended yet");
+        _;
+    }
+
     modifier onlyActivatedExpert() {
         require(experts[msg.sender].status == ExpertStatus.activated, "You are not an activated expert!");
         _;
@@ -64,13 +68,22 @@ contract ExpertReview is Ownable {
     }
 
     modifier EPMProposalPlanned(uint16 _epm_proposalID) {
-        require(epm_proposal[_epm_proposalID].state == EPMState.proposed, "The EPM is not in the right state (proposed)!");
+        require(votings[_epm_proposalID].votingStart > block.timestamp, "The EPM is not in the right state (proposed)!");
         _;
     }
 
     modifier EPMProposalStarted(uint16 _epm_proposalID) {
-        require(epm_proposal[_epm_proposalID].state == EPMState.started, "The EPM is not in the right state (started)!");
+        require(block.timestamp >= votings[_epm_proposalID].votingStart, "Voting hasn't started yet");
+        require(block.timestamp <= votings[_epm_proposalID].votingEnd, "Voting has ended");
     }
+
+    modifier EPMProposalEnded(uint16 _epm_proposalID) {
+        require(votings[_epm_proposalID].votingEnd < block.timestamp, "The EPM is not in the right state (ended)!");
+        _;
+    }
+
+    event VotingAdded(uint16 votingID);
+    event Voted(address voter, uint16 votingID, bool yesVote)
 
     string public adminName;
 
@@ -143,41 +156,42 @@ contract ExpertReview is Ownable {
             delete epm_proposals[_id];
         }
 
-
-    function addVoting(uint16 epm_proposalID, uint256 _votingStart, uint256 _votingEnd, uint8 _minimumVotes)
+    function addVoting(uint16 _epm_proposalID, uint256 _votingStart, uint256 _votingEnd, uint8 _quorum)
         public
         onlyAuthor onlyActivatedExpert
-        returns (uint16 votingID)
         {
-            votings[epm_proposalID] = Voting(_votingStart, _votingEnd, _minimumVotes, 0, 0, false, VotingState.added);
-            return epm_proposalID;
+            require(_quorum>0 && _quorum<numVerifiers, "quorum set too low or high");
+            require(_quorum%2 == 0, "Only odd quorum allowed");
+            require(_quorum == 1, "Quorum has to be minimum 3");
+            require(block.timestamp <= _votingStart, "Voting start time has to be in future");
+            require(_votingStart < _votingEnd, "Voting end time has to be after start time");
+            votings[_epm_proposalID] = Voting(_votingStart, _votingEnd, _quorum, 0, 0, false);
+            emit VotingAdded(_epm_proposalID);
         }
-
-    function startVoting(uint16 epm_proposalID)
-        public
-        onlyActivatedExpert onlyAuthor EPMProposalPlanned(epm_proposalID)
-        {
-            votings[epm_proposalID].state == VotingState.started;
-            epm_proposals[epm_proposalID].state == EPMState.started;
-        }
-
 
     function castVote(uint16 _epm_proposalID, bool _yesVote)
         public
         onlyActivatedExpert
-        EPMProposalStarted(epm_proposalID)
-        inVotingPeriod(_votingID)
+        EPMProposalStarted(_epm_proposalID)
         {
             require(experts[msg.sender].votings[_epm_proposalID], "Already voted");
             votings[_epm_proposalID].yesVote[msg.sender] = _yesVote;
             if(_yesVote) {votings[_epm_proposalID].yesVotes += 1;}
             votings[_epm_proposalID].totalVotes += 1;
+            emit Voted(msg.sender, _epm_proposalID, _yesVote);
         }
-    
-    function checkVoting(uint16 _id) 
+
+    function readVotingResults(uint16 _epm_proposalID)
         public
+        view
+        EPMProposalEnded(_epm_proposalID)
+        returns(bool)
         {
-            // @todo: implement the voting check function
+            if((votings[_epm_proposalID].totalVotes-votings[_epm_proposalID].yesVotes) < votings[_epm_proposalID].yesVotes){
+                return true; // voting accepted
+            } else {
+                return false; // voting rejected
+            }
         }
 
 
@@ -189,23 +203,24 @@ contract ExpertReview is Ownable {
             return(experts[_id].status);
         }
 
-    function readVotingStatus(uint16 _id)
+    function readVotingStatus(uint16 _votingID)
         public
         view
-        returns(VotingStatus)
+        returns(bytes32)
         {
-            return(votings[_id].status);
+            if(votings[_votingID].votingStart == 0) {return "invalid votingID";}
+
+            if (block.timestamp < votings[_votingID].votingStart){
+                return "not started yet";
+            } else
+            if(block.timestamp >= votings[_votingID].votingStart && block.timestamp <= votings[_votingID].votingEnd){
+                return "started";
+            } else {
+                return "ended";
+            }
         }
 
     function readEPMProposal(uint16 _id)
-        public
-        view
-        returns(String title, String description, ProofType proofType)
-        {
-            return(epm_proposals[_id].title, epm_proposals[_id].description, epm_proposals[_id].proofType);
-        }
-
-    function readVotingResults(uint16 _id)
         public
         view
         returns(String title, String description, ProofType proofType)
