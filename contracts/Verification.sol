@@ -176,16 +176,5 @@ contract Verification is Ownable {
         {
             selfdestruct(msg.sender);
         }
-    /*
-    pragma experimental ABIEncoderV2 needed for returning structs
-    function getVerifier(address _id)
-        public
-        view
-        returns(Verifier)
-        {
-            return verifiers[_id];
-        }
-    */
-
-
+   
 }
