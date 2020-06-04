@@ -1,5 +1,7 @@
 pragma solidity >=0.4.21 <0.7.0;
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+//import "./contracts/openzeppelin-solidity/contracts
+import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
+//SPDX-License-Identifier: MIT
 
 /**
 *@todo: Implement roles instead of ownable
@@ -7,11 +9,11 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
  */
 
 contract ExpertReview is Ownable {
-    enum ExpertStatus {verified, restricted, blocked}
+    enum ExpertStatus {unverified, verified, restricted, blocked}
     enum EPMState {started, inactive, proposed}
 
     struct Expert {
-        String name;
+        string name;
         ExpertStatus status;
         bool instantiated;
         mapping(uint16 => bool) votings;
@@ -30,20 +32,20 @@ contract ExpertReview is Ownable {
     }
 
     struct EPMProposal {
-       String title;
-       String description;
+       string title;
+       string description;
        ProofType proofType;
        address author;
        EPMState state;
     }
 
     struct ProofType {
-        String description;
+        string description;
         //EPM[] epms; @todo: Define EPM struct
         //uint256 stakingMinimum;
-        String verificationSteps;
-        String preCondition;
-        String postCondition;
+        string verificationSteps;
+        string preCondition;
+        string postCondition;
     }
 
     modifier inVotingPeriod(uint16 _votingID) {
@@ -58,12 +60,12 @@ contract ExpertReview is Ownable {
     }
 
     modifier onlyActivatedExpert() {
-        require(experts[msg.sender].status == ExpertStatus.activated, "You are not an activated expert!");
+        require(experts[msg.sender].status == ExpertStatus.verified, "You are not an activated expert!");
         _;
     }
 
     modifier onlyAuthor(uint16 _epm_proposalID) {
-        require(epm_proposal[_epm_proposalID].author == msg.sender, "You are not the author of the EPM!");
+        require(epm_proposals[_epm_proposalID].author == msg.sender, "You are not the author of the EPM!");
         _;
     }
 
@@ -75,6 +77,7 @@ contract ExpertReview is Ownable {
     modifier EPMProposalStarted(uint16 _epm_proposalID) {
         require(block.timestamp >= votings[_epm_proposalID].votingStart, "Voting hasn't started yet");
         require(block.timestamp <= votings[_epm_proposalID].votingEnd, "Voting has ended");
+        _;
     }
 
     modifier EPMProposalEnded(uint16 _epm_proposalID) {
@@ -83,10 +86,10 @@ contract ExpertReview is Ownable {
     }
 
     event VotingAdded(uint16 votingID);
-    event Voted(address voter, uint16 votingID, bool yesVote)
+    event Voted(address voter, uint16 votingID, bool yesVote);
 
     string public adminName;
-
+ 
     mapping(address => Expert) public experts; 
     uint256 public numExperts;
 
@@ -99,25 +102,25 @@ contract ExpertReview is Ownable {
     constructor (string memory _adminName, address[] memory _experts)
         public
         {
-            _transferOwnership(msg.sender);
+            transferOwnership(msg.sender);
             adminName = _adminName;
             numExperts = _experts.length;
 
             for (uint i = 0; i < _experts.length; i++){
-                verifiers[_experts[i]].rating = 100;
-                verifiers[_experts[i]].status = ExpertStatus.active;
-                verifiers[_experts[i]].instantiated = true;
+                //experts[_experts[i]].rating = 100;
+                experts[_experts[i]].status = ExpertStatus.verified;
+                experts[_experts[i]].instantiated = true;
         }
     }
 
-    function changeAdministrator (adress _newOwner, string _adminName)
+    function changeAdministrator (address _newOwner, string memory _adminName)
         public
         {
             transferOwnership(_newOwner);
             adminName = _adminName;
         }
 
-    function modifyExpert(address _id, String _name, ExpertStatus _status)
+    function modifyExpert(address _id, string memory _name, ExpertStatus _status)
         public
         onlyOwner
         {
@@ -128,22 +131,22 @@ contract ExpertReview is Ownable {
         }
 
 
-    function createEPMProposal(String _title, String _description, String _proof_description, String _verificationSteps, String _preCondition, String _postCondition)
+    function createEPMProposal(string memory _title, string memory _description, string memory _proof_description, string memory _verificationSteps, string memory _preCondition, string memory _postCondition)
         public
         onlyActivatedExpert
         returns (uint16 epm_proposalID)
         {
-            epm_proposalID = epm_proposalNum++;
-            proofType = ProofType(_proof_description, _verificationSteps, _preCondition, _postCondition);
+            epm_proposalID = epm_proposalsNum++;
+            ProofType memory proofType = ProofType(_proof_description, _verificationSteps, _preCondition, _postCondition);
             epm_proposals[epm_proposalID] = EPMProposal(_title, _description, proofType, msg.sender, EPMState.proposed);
             return epm_proposalID;
         }
 
-    function modifyEPMProposal(uint16 _id, String _title, String _description, String _proof_description, String _verificationSteps, String _preCondition, String _postCondition)
+    function modifyEPMProposal(uint16 _id, string memory _title, string memory _description, string memory _proof_description, string memory _verificationSteps, string memory _preCondition, string memory _postCondition)
         public
-        onlyOwner onlyAuthor EPMProposalPlanned(_id)
+        onlyOwner /*onlyAuthor*/ EPMProposalPlanned(_id)
         {
-            proofType = ProofType(_proof_description, _verificationSteps, _preCondition, _postCondition);
+            ProofType memory proofType = ProofType(_proof_description, _verificationSteps, _preCondition, _postCondition);
             epm_proposals[_id].title = _title;
             epm_proposals[_id].description = _description;
             epm_proposals[_id].proofType = proofType;
@@ -151,16 +154,16 @@ contract ExpertReview is Ownable {
 
     function deleteEPMProposal(uint16 _id)
         public
-        onlyOwner onlyAuthor EPMProposalPlanned(_id)
+        onlyOwner /*onlyAuthor*/  EPMProposalPlanned(_id)
         {
             delete epm_proposals[_id];
         }
 
     function addVoting(uint16 _epm_proposalID, uint256 _votingStart, uint256 _votingEnd, uint8 _quorum)
         public
-        onlyAuthor onlyActivatedExpert
+        /*onlyAuthor*/  onlyActivatedExpert
         {
-            require(_quorum>0 && _quorum<numVerifiers, "quorum set too low or high");
+            require(_quorum>0 && _quorum<numExperts, "quorum set too low or high");
             require(_quorum%2 == 0, "Only odd quorum allowed");
             require(_quorum == 1, "Quorum has to be minimum 3");
             require(block.timestamp <= _votingStart, "Voting start time has to be in future");
@@ -223,9 +226,9 @@ contract ExpertReview is Ownable {
     function readEPMProposal(uint16 _id)
         public
         view
-        returns(String title, String description, ProofType proofType)
+        returns(string memory title, string memory description/*, ProofType memory proofType*/)
         {
-            return(epm_proposals[_id].title, epm_proposals[_id].description, epm_proposals[_id].proofType);
+            return(epm_proposals[_id].title, epm_proposals[_id].description/*, epm_proposals[_id].proofType*/);
         }
 
     /*
