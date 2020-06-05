@@ -10,18 +10,18 @@ contract Donation is Ownable {
     mapping(uint16 => Farmer) public farmers;
     uint16 numFarmers;
     //mapping(address=> Donor) public donors;
-    string public adminName;
+    //string public adminName;
 
 
-    constructor (string memory _adminName) public {
-        adminName = _adminName;
+    constructor (/*string memory _adminName*/) public {
+        //adminName = _adminName;
     }
 
-    function changeAdministrator (address _newOwner, string memory _adminName)
+    function changeAdministrator (address _newOwner/*, string memory _adminName*/)
         public
         {
             transferOwnership(_newOwner);
-            adminName = _adminName;
+            //adminName = _adminName;
         }
 
     function addFarmer(string memory name, string memory description, string memory bankAccount) public
