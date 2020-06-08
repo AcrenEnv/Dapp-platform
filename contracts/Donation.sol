@@ -2,13 +2,36 @@ pragma solidity >=0.4.21 <0.7.0;
 import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
 //SPDX-License-Identifier: MIT
 
+
+contract Campaign is Ownable {
+    string public description;
+    int[2] public duration;
+    enum state {approval_needed, open, closed , full, canceled}
+    mapping(uint16 => id) donation;
+    int[2] public limit; // [0] minimum, [1] maximum
+    int amount;
+    //EPM
+    //donations[]
+    //Proof
+    //[Prooftype?]
+
+    constructor (string _description, int _start, int _end, int _minimum, int _maximum) public {
+        description = _description;
+        duration[] = [_start, _end];
+        limit[] = [_minimum, _maximum];
+    }
+
+}
+
+
 contract Donation is Ownable {
     enum FarmerState {unverfied, verified, restricted, blocked}
 
     //enum paymentState {}
-    //address[] campaigns;
+    address[] public campaigns; //@todo: standardize
     mapping(uint16 => Farmer) public farmers;
     uint16 numFarmers;
+    //EPM[..] public allowedEPMs
     //mapping(address=> Donor) public donors;
     //string public adminName;
 
@@ -47,12 +70,28 @@ contract Donation is Ownable {
         farmers[id].bankAccount = bankAccount;
     }
 
+    function getFarmer(uint16 id)
+    public
+    view
+    returns(string memory, string memory, string memory, FarmerState)
+    {
+        return(
+        farmers[id].name,
+        farmers[id].description,
+        farmers[id].bankAccount,
+        farmers[id].state
+        );
+
+    }
+
+
 
     struct Farmer {
         string name;
         string description; // ipfs
         string bankAccount;
         FarmerState state;
+        //Campaign campaign;
     }
 
     function deleteContract()
@@ -60,6 +99,28 @@ contract Donation is Ownable {
         onlyOwner
         {
             selfdestruct(msg.sender);
+        }
+
+    struct Contributer{
+        uint256 amount;
+        string contactData; // ipfs
+        string bankAccount;
+        address ethAddress;
+    }
+
+    function createCampaign(string memory _description, int _start, int _end, int _minimum, int _maximum)
+        public
+        /*onlyFarmer*/
+        {
+            Campaign campaign = new Campaign(_description, _start, _end, _minimum, _maximum);
+            campaigns.push(campaign);
+
+        }
+    function getCampaignCount()
+        public
+        returns(int campaignCount)
+        {
+            return(campaigns.length);
         }
 
 
