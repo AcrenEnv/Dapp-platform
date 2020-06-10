@@ -8,12 +8,13 @@ contract Campaign is Ownable {
     mapping(uint16 => Donation) donations;
     int[2] public limit; // [0] minimum, [1] maximum
     int amount;
+    EPM epm;
     //EPM
     //donations[]
     //Proof
     //[Prooftype?]
 
-    constructor (string memory _description, int _start, int _end, int _minimum, int _maximum) public {
+    constructor (string memory _description, int _start, int _end, int _minimum, int _maximum, string memory epmName) public {
         description = _description;
         duration[0] = _start;
         duration[1] = _end;
@@ -70,6 +71,7 @@ abstract contract EPM is Ownable {
     }
 
 }
+
 contract WildflowerMeadow is EPM (1,2,3,4,5) {
 
 

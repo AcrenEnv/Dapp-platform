@@ -37,6 +37,7 @@ contract Platform is Ownable {
         farmers[numFarmers].id = numFarmers;
         numFarmers++;
     }
+
     function setFarmerState(uint16 id, FarmerState state) public
     onlyOwner
     {
@@ -91,12 +92,12 @@ contract Platform is Ownable {
         address ethAddress;
     }
 
-    function createCampaign(uint16 farmerID, string memory _description, int _start, int _end, int _minimum, int _maximum/*, EPM*/)
+    function createCampaign(uint16 farmerID, string memory _description, int _start, int _end, int _minimum, int _maximum, string memory _epmName)
         public
         /*onlyActivatedFarmer*/
         /*onlyAllowedEPMs*/
         {
-            Campaign campaign = new Campaign(_description, _start, _end, _minimum, _maximum);
+            Campaign campaign = new Campaign(_description, _start, _end, _minimum, _maximum, _epmName);
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
         }
