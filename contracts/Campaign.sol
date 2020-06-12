@@ -1,14 +1,18 @@
 pragma solidity >=0.4.21 <0.7.0;
 import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./NameRegistry.sol";
 //SPDX-License-Identifier: MIT
+
 contract Campaign is Ownable {
     string public description;
     int[2] public duration;
     enum state {approval_needed, open, closed , full, canceled}
     mapping(uint16 => Donation) donations;
     int[2] public limit; // [0] minimum, [1] maximum
-    int amount;
-    EPM epm;
+    int public amount;
+    EPM public epm;
+    NameRegistry public nameRegistry;
+    
     //EPM
     //donations[]
     //Proof
@@ -20,6 +24,7 @@ contract Campaign is Ownable {
         duration[1] = _end;
         limit[0] = _minimum;
         limit[1] = _maximum;
+        epm = EPM(nameRegistry.getContractDetails(epmName));
     }
 
     struct Donation {
