@@ -12,9 +12,6 @@ contract Campaign is Ownable {
     int public amount;
     EPM public epm;
     NameRegistry public nameRegistry;
-    
-    //EPM
-    //donations[]
     //Proof
     //[Prooftype?]
 
@@ -30,6 +27,8 @@ contract Campaign is Ownable {
     struct Donation {
         string donor;
         string amount;
+        //State
+        //ID
     }
 
 
