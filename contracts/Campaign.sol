@@ -23,11 +23,13 @@ contract Campaign is Ownable {
         limit[1] = _maximum;
         epm = EPM(nameRegistry.getContractDetails(epmName));
     }
-
+    enum Paymentmethod {banktransfer, DAI, Ether}
+    enum DonationState {donor_sent, donor_received, admin_received, admin_sent, farmer_received}
     struct Donation {
         string donor;
         string amount;
-        //State
+        Paymentmethod paymentmethod;
+        DonationState donationState;
         //ID
     }
 
