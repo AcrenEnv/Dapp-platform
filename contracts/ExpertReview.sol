@@ -3,10 +3,6 @@ pragma solidity >=0.4.21 <0.7.0;
 import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
 //SPDX-License-Identifier: MIT
 
-/**
-*@todo: Implement roles instead of ownable
-*
- */
 
 contract ExpertReview is Ownable {
     enum ExpertStatus {unverified, verified, restricted, blocked}

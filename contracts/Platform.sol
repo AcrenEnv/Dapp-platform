@@ -11,7 +11,7 @@ contract Platform is Ownable {
     //enum paymentState {}
     Campaign[] public campaigns; //@todo: standardize
     mapping(uint16 => Farmer) public farmers;
-    uint16 numFarmers;
+    uint16 numFarmers = 0;
     //EPM[..] public allowedEPMs
     //mapping(address=> Donor) public donors;
     //string public adminName;
@@ -38,6 +38,7 @@ contract Platform is Ownable {
         farmers[numFarmers].state = FarmerState.unverfied;
         farmers[numFarmers].id = numFarmers;
         numFarmers++;
+       
     }
 
     function setFarmerState(uint16 id, FarmerState state) public
