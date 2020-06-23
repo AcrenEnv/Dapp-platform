@@ -15,6 +15,9 @@ contract Platform is Ownable {
     //EPM[..] public allowedEPMs
     //mapping(address=> Donor) public donors;
     //string public adminName;
+    event FarmerAdded(
+        uint16 farmerID
+    );
 
 
 
@@ -37,8 +40,8 @@ contract Platform is Ownable {
         farmers[numFarmers].bankAccount = bankAccount;
         farmers[numFarmers].state = FarmerState.unverfied;
         farmers[numFarmers].id = numFarmers;
+        emit FarmerAdded(numFarmers);
         numFarmers++;
-       
     }
 
     function setFarmerState(uint16 id, FarmerState state) public
