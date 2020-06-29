@@ -4,13 +4,12 @@ const truffleAssert = require('truffle-assertions');
 //let accounts = await web3.eth.getAccounts();
 contract('Platform', accounts => {
 
+    let randomNonOwner = accounts[1];    
+
     it("should correctly add a farmers to plattform", async () => {
-        let randomNonOwner = accounts[1];
-        
         let instance = await Platform.deployed();
         let result0 = await instance.addFarmer("TestFarmer", "TestDescription", "11111100000");
         let result1 = await instance.addFarmer("TestFarmer2", "TestDescription2", "11111100000");
-
         const farmerReturn = await instance.getFarmer(0);
         const unverified = 0;
          
@@ -27,9 +26,19 @@ contract('Platform', accounts => {
     });
 
     it("should modify farmers correctly", async() =>{
+
+        const verified = 1;
+
         let instance = await Platform.deployed();
-        instance.modifyFarmer(0, "changedName", "changedDescription", "0000");
-        
+        let result0 = await instance.modifyFarmer(0, "changedName", "changedDescription", "0000", verified);
+        truffleAssert.eventEmitted(result0, 'FarmerModified', (ev) => {
+             return (
+                 ev.farmerID == 0
+                 && ev.name === "changedName"
+                 && ev.description === "changedDescription"
+                 && ev.bankAccount === "0000"); 
+            });
+        await truffleAssert.reverts(instance.modifyFarmer(0, "changedName", "changedDescription", "0000", verified, {from: randomNonOwner}));
 
     });
 });
