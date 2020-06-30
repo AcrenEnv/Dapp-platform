@@ -26,6 +26,10 @@ contract Platform is Ownable {
         FarmerState state
 
     );
+    event FarmerStateModified(
+        uint16 farmerID,
+        FarmerState state
+    );
 
     constructor (/*string memory _adminName*/) public {
         //adminName = _adminName;
@@ -54,6 +58,7 @@ contract Platform is Ownable {
     onlyOwner
     {
         farmers[id].state = state;
+        emit FarmerStateModified(id, state);
     }
 
     function modifyFarmer(uint16 id, string memory name, string memory description, string memory bankAccount, FarmerState state) public

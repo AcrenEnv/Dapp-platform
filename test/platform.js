@@ -41,4 +41,30 @@ contract('Platform', accounts => {
         await truffleAssert.reverts(instance.modifyFarmer(0, "changedName", "changedDescription", "0000", verified, {from: randomNonOwner}));
 
     });
+
+    it("should change farmers state correctly", async() =>{
+        const unverified = 0;
+        const verified = 1;
+        const restricted = 2;
+
+        let instance = await Platform.deployed();
+        const farmerReturn = await instance.getFarmer(0);
+
+        assert.equal( farmerReturn[3] == verified, true, "Farmer´s initial state is wrong");
+
+        let result0 = await instance.setFarmerState(0, restricted);
+        
+        truffleAssert.eventEmitted(result0, 'FarmerStateModified', (ev) => {
+            return (
+                ev.farmerID == 0
+                && parseInt(ev.state) === 2// == restricted
+             ); 
+           });
+
+        await truffleAssert.reverts(instance.setFarmerState(0, verified, {from: randomNonOwner}));
+
+
+    });
+
+
 });
