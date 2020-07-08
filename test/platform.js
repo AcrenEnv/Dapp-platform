@@ -1,12 +1,13 @@
 require('truffle-test-utils').init();
 var Platform = artifacts.require('Platform');
+//var NameRegistery = artifacts.require('NameRegistery')
 const truffleAssert = require('truffle-assertions');
 //let accounts = await web3.eth.getAccounts();
 contract('Platform', accounts => {
 
     let randomNonOwner = accounts[1];    
 
-    it("should correctly add a farmers to plattform", async () => {
+    it("should correctly add and get a farmers to plattform", async () => {
         let instance = await Platform.deployed();
         let result0 = await instance.addFarmer("TestFarmer", "TestDescription", "11111100000");
         let result1 = await instance.addFarmer("TestFarmer2", "TestDescription2", "11111100000");
@@ -65,6 +66,16 @@ contract('Platform', accounts => {
 
 
     });
+
+    /*it("should create a campaign correctly", async() =>{
+        let instance = await Platform.deployed();
+        let start = Date.now();
+        let end = start + 120;
+        let minimumDollar = 10;
+        let maximumDollar = 1200;
+        const campaignReturn = await instance.createCampaign(0, "campaign Description", start, end, minimumDollar, maximumDollar, "WildflowerMeadow");
+
+    });*/
 
 
 });

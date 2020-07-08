@@ -112,7 +112,9 @@ contract Platform is Ownable {
         address ethAddress;
     }
 
-    function createCampaign(uint16 farmerID, string memory _description, int _start, int _end, int _minimum, int _maximum, string memory _epmName)
+    function createCampaign(
+        uint16 farmerID, string memory _description,int _start, int _end, int _minimum, int _maximum, string memory _epmName
+        )
         public
         /*onlyActivatedFarmer*/
         /*onlyAllowedEPMs*/
