@@ -6,8 +6,8 @@ var NameRegistry = artifacts.require('NameRegistry');
 var Platform = artifacts.require('Platform');
 
 contract('NameRegistry', accounts => {
-
-    it('should correctly register a name ', async() =>{
+     let randomNonOwner = accounts[1];  
+    it('should correctly register and fetch a name ', async() =>{
         let instance = await NameRegistry.deployed();
         const name = "Platform";
         const platformAddress = Platform.address;
@@ -16,6 +16,7 @@ contract('NameRegistry', accounts => {
         returnPlatformAddress = await instance.getContractDetails("Platform");
 
         assert.equal(platformAddress == returnPlatformAddress, true, "Registered Platform address is not equal");
+        //await truffleAssert.reverts(instance.registerName("name2", platformAddress, {from: randomNonOwner}));
 
 
     });

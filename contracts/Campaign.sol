@@ -5,23 +5,27 @@ import "./NameRegistry.sol";
 
 contract Campaign is Ownable {
     string public description;
-    int[2] public duration;
+    uint[2] public duration;
     enum state {approval_needed, open, closed , full, canceled}
     mapping(uint16 => Donation) donations;
-    int[2] public limit; // [0] minimum, [1] maximum
-    int public amount;
-    EPM public epm;
+    uint[2] public limit; // [0] minimum, [1] maximum
+    uint public amount;
+    //EPM public epm;
+    string public epm;
     NameRegistry public nameRegistry;
+    uint campaingID;
     //Proof
     //[Prooftype?]
 
-    constructor (string memory _description, int _start, int _end, int _minimum, int _maximum, string memory epmName) public {
+    constructor (uint _campaignID, string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName) public {
+        campaingID = _campaignID;
         description = _description;
         duration[0] = _start;
         duration[1] = _end;
         limit[0] = _minimum;
         limit[1] = _maximum;
-        epm = EPM(nameRegistry.getContractDetails(epmName));
+        epm = epmName;
+        //epm = EPM(nameRegistry.getContractDetails(epmName));
     }
     enum Paymentmethod {banktransfer, DAI, Ether}
     enum DonationState {donor_sent, donor_received, admin_received, admin_sent, farmer_received}
@@ -33,11 +37,21 @@ contract Campaign is Ownable {
         //ID
     }
 
+   /* function getCampaignData()
+    public
+    view
+    returns(string memory _description/*, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint amount)
+    {
+    return description;
+    }*/
+
+
+
 
 
 }
 
-abstract contract EPM is Ownable {
+/*abstract*/ contract EPM is Ownable {
     uint[2] costs;
     uint duration;
     uint[2] acceptedTimeframe;

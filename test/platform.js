@@ -2,7 +2,9 @@ require('truffle-test-utils').init();
 var Platform = artifacts.require('Platform');
 //var NameRegistery = artifacts.require('NameRegistery')
 const truffleAssert = require('truffle-assertions');
-//let accounts = await web3.eth.getAccounts();
+var WildflowerMeadow = artifacts.require('WildflowerMeadow');
+var NameRegistry = artifacts.require('NameRegistry');
+
 contract('Platform', accounts => {
 
     let randomNonOwner = accounts[1];    
@@ -66,16 +68,37 @@ contract('Platform', accounts => {
 
 
     });
-
-    /*it("should create a campaign correctly", async() =>{
+    
+    it("should create an EPM and campaign correctly", async() =>{
+        
+        let wildflowerInstance = await WildflowerMeadow.deployed();
+        let nameRegistryInstance = await NameRegistry.deployed();
+        await nameRegistryInstance.registerName("WildflowerMeadowEPM", wildflowerInstance.address);
+        
         let instance = await Platform.deployed();
-        let start = Date.now();
+        let start = 100;
         let end = start + 120;
         let minimumDollar = 10;
         let maximumDollar = 1200;
-        const campaignReturn = await instance.createCampaign(0, "campaign Description", start, end, minimumDollar, maximumDollar, "WildflowerMeadow");
+        let epmName = "WildflowerMeadowEPM";
+        let result0 = await instance.createCampaign(0, "First campaign Description", start, end, minimumDollar, maximumDollar, epmName);
+        let result1 = await instance.createCampaign(0, "Second Description", start, end, minimumDollar, maximumDollar, epmName);
+        truffleAssert.eventEmitted(result0, 'CampaignCreated', (ev) => {
+            return (
+                ev.farmerID == 0
+                && ev.campaignID == 1// == restricted
+             ); 
+           });
 
-    });*/
+           truffleAssert.eventEmitted(result1, 'CampaignCreated', (ev) => {
+            return (
+                ev.farmerID == 0
+                && ev.campaignID == 2// == restricted
+             ); 
+           });
+        await truffleAssert.reverts(instance.createCampaign(0, "Second Description", start, end, minimumDollar, maximumDollar, epmName, {from: randomNonOwner}));
+
+    });
 
 
 });

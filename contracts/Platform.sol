@@ -15,6 +15,9 @@ contract Platform is Ownable {
     //EPM[..] public allowedEPMs
     //mapping(address=> Donor) public donors;
     //string public adminName;
+
+    uint campaignCount = 0;
+
     event FarmerAdded(
         uint16 farmerID
     );
@@ -30,6 +33,11 @@ contract Platform is Ownable {
         uint16 farmerID,
         FarmerState state
     );
+    event CampaignCreated(
+        uint16 farmerID,
+        uint campaignID
+    );
+
 
     constructor (/*string memory _adminName*/) public {
         //adminName = _adminName;
@@ -113,25 +121,43 @@ contract Platform is Ownable {
     }
 
     function createCampaign(
-        uint16 farmerID, string memory _description,int _start, int _end, int _minimum, int _maximum, string memory _epmName
+        uint16 farmerID, string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory _epmName
         )
         public
         /*onlyActivatedFarmer*/
         /*onlyAllowedEPMs*/
+        onlyOwner
         {
-            Campaign campaign = new Campaign(_description, _start, _end, _minimum, _maximum, _epmName);
+            campaignCount++;
+            Campaign campaign = new Campaign(campaignCount, _description, _start, _end, _minimum, _maximum, _epmName);
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
+            emit CampaignCreated(farmerID, campaignCount);
         }
+    function getCampainAddressByFarmerIdAndCampaignId(uint16 farmerID, uint16 campaignID)
+    public
+    view
+    returns(address campaignAddress )
+    {
 
-    function getCampaignCount()
+        return address(farmers[farmerID].campaigns[campaignID]);
+    }
+
+    /*function getCampaignsByFarmerAndCampaignID(uint16 farmerID, uint16 campaignID)
+    public
+    view
+    returns (string memory description/*, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint amount){
+        description = farmers[farmerID].campaigns[campaignID].getCampaignData();
+        return description;
+    }*/
+    /*function getCampaignCount()
         public
         view
         returns(uint256 campaignCount)
         {
-            return(campaigns.length);
+            return(campaignCount);
         }
-
+*/
 
 
 
