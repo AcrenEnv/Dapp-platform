@@ -37,13 +37,13 @@ contract Campaign is Ownable {
         //ID
     }
 
-   /* function getCampaignData()
+    function getCampaignData()
     public
     view
-    returns(string memory _description/*, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint amount)
+    returns(string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint _amount)
     {
-    return description;
-    }*/
+        return (description, duration[0], duration[1], limit[0], limit[1], epm, amount);
+    }
 
 
 

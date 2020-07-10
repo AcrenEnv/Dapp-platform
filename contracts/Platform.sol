@@ -35,7 +35,8 @@ contract Platform is Ownable {
     );
     event CampaignCreated(
         uint16 farmerID,
-        uint campaignID
+        uint campaignID,
+        address campaignAddress
     );
 
 
@@ -128,19 +129,20 @@ contract Platform is Ownable {
         /*onlyAllowedEPMs*/
         onlyOwner
         {
-            campaignCount++;
             Campaign campaign = new Campaign(campaignCount, _description, _start, _end, _minimum, _maximum, _epmName);
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
-            emit CampaignCreated(farmerID, campaignCount);
+            campaignCount++;
+            emit CampaignCreated(farmerID, campaignCount, address(campaign));
         }
+
     function getCampainAddressByFarmerIdAndCampaignId(uint16 farmerID, uint16 campaignID)
     public
     view
-    returns(address campaignAddress )
+    returns(address campaignAddress)
     {
 
-        return address(farmers[farmerID].campaigns[campaignID]);
+        return address(farmers[farmerID].campaigns[campaignID-1]);
     }
 
     /*function getCampaignsByFarmerAndCampaignID(uint16 farmerID, uint16 campaignID)

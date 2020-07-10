@@ -75,7 +75,7 @@ contract('Platform', accounts => {
         let nameRegistryInstance = await NameRegistry.deployed();
         await nameRegistryInstance.registerName("WildflowerMeadowEPM", wildflowerInstance.address);
         
-        let instance = await Platform.deployed();
+        var instance = await Platform.deployed();
         let start = 100;
         let end = start + 120;
         let minimumDollar = 10;
@@ -83,20 +83,28 @@ contract('Platform', accounts => {
         let epmName = "WildflowerMeadowEPM";
         let result0 = await instance.createCampaign(0, "First campaign Description", start, end, minimumDollar, maximumDollar, epmName);
         let result1 = await instance.createCampaign(0, "Second Description", start, end, minimumDollar, maximumDollar, epmName);
+        let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1)
+        let resultCampaignAddress2 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 2)
+
+        var instance = await Platform.deployed();
         truffleAssert.eventEmitted(result0, 'CampaignCreated', (ev) => {
-            return (
-                ev.farmerID == 0
-                && ev.campaignID == 1// == restricted
-             ); 
+                return (
+                    ev.farmerID == 0
+                    && ev.campaignID == 1
+                    && ev.campaignAddress == resultCampaignAddress1
+                 ); 
+            
            });
 
-           truffleAssert.eventEmitted(result1, 'CampaignCreated', (ev) => {
+        truffleAssert.eventEmitted(result1, 'CampaignCreated', (ev) => {
             return (
                 ev.farmerID == 0
-                && ev.campaignID == 2// == restricted
+                && ev.campaignID == 2
+                && ev.campaignAddress == resultCampaignAddress2
              ); 
            });
-        await truffleAssert.reverts(instance.createCampaign(0, "Second Description", start, end, minimumDollar, maximumDollar, epmName, {from: randomNonOwner}));
+    
+           await truffleAssert.reverts(instance.createCampaign(0, "First campaign Description", start, end, minimumDollar, maximumDollar, epmName, {from: randomNonOwner}));
 
     });
 
