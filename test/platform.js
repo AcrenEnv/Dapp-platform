@@ -4,6 +4,7 @@ var Platform = artifacts.require('Platform');
 const truffleAssert = require('truffle-assertions');
 var WildflowerMeadow = artifacts.require('WildflowerMeadow');
 var NameRegistry = artifacts.require('NameRegistry');
+var Campaign = artifacts.require('Campaign');
 
 contract('Platform', accounts => {
 
@@ -21,7 +22,8 @@ contract('Platform', accounts => {
             && farmerReturn[1] === "TestDescription"
             &&  farmerReturn[2] === "11111100000"
             &&  farmerReturn[3] == unverified
-            && farmerReturn[4] == null, true, "Farmer was not successfully added");
+            && farmerReturn[4] == 0
+            && farmerReturn[5] == null, true, "Farmer was not successfully added");
 
         truffleAssert.eventEmitted(result0, 'FarmerAdded', (ev) => { return ev.farmerID == 0; });
         truffleAssert.eventEmitted(result1, 'FarmerAdded', (ev) => { return ev.farmerID == 1; });
@@ -68,7 +70,6 @@ contract('Platform', accounts => {
 
 
     });
-    
     it("should create an EPM and campaign correctly", async() =>{
         
         let wildflowerInstance = await WildflowerMeadow.deployed();
@@ -86,7 +87,7 @@ contract('Platform', accounts => {
         let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1)
         let resultCampaignAddress2 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 2)
 
-        var instance = await Platform.deployed();
+       
         truffleAssert.eventEmitted(result0, 'CampaignCreated', (ev) => {
                 return (
                     ev.farmerID == 0
@@ -108,5 +109,40 @@ contract('Platform', accounts => {
 
     });
 
+    it("should get all campaigns of a farmer", async() =>{
+        var instance = await Platform.deployed();
+        let farmerResult = await instance.getFarmer(0);
+        assert.equal(farmerResult['4'] == 2, true, "Farmer has more or less than two campaigns!");
+        let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1);
+        let resultCampaignAddress2 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 2);
+        let campaignInstance = await Campaign.at(resultCampaignAddress1);
+        let campaignInstance2 = await Campaign.at(resultCampaignAddress2);
+
+        let campaignData = await campaignInstance.getCampaignData();
+        let campaignData2 = await campaignInstance2.getCampaignData();
+
+        assert.equal(
+            campaignData['_description'] == 'First campaign Description'
+            && campaignData['_start'] == 100
+            && campaignData['_end'] == 220
+            && campaignData['_minimum'] == 10
+            && campaignData['_maximum'] == 1200
+            && campaignData['epmName'] == 'WildflowerMeadowEPM'
+            && campaignData['_amount'] == 0
+        
+            , true, "First campaign is wrong (unexpected data)");
+
+            assert.equal(
+                campaignData2['_description'] == 'Second Description'
+                && campaignData2['_start'] == 100
+                && campaignData2['_end'] == 220
+                && campaignData2['_minimum'] == 10
+                && campaignData2['_maximum'] == 1200
+                && campaignData2['epmName'] == 'WildflowerMeadowEPM'
+                && campaignData2['_amount'] == 0
+            
+                , true, "Second campaign is wrong (unexpected data)");
+
+    }); 
 
 });

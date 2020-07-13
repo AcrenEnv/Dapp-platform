@@ -84,13 +84,14 @@ contract Platform is Ownable {
     function getFarmer(uint16 id)
     public
     view
-    returns(string memory, string memory, string memory, FarmerState)
+    returns(string memory, string memory, string memory, FarmerState, uint)
     {
         return(
         farmers[id].name,
         farmers[id].description,
         farmers[id].bankAccount,
-        farmers[id].state
+        farmers[id].state,
+        farmers[id].campaignsCount
         );
 
     }
@@ -105,6 +106,7 @@ contract Platform is Ownable {
         FarmerState state;
         EPM[] epms;
         Campaign[] campaigns;
+        uint campaignsCount;
     }
 
     function deleteContract()
@@ -132,6 +134,7 @@ contract Platform is Ownable {
             Campaign campaign = new Campaign(campaignCount, _description, _start, _end, _minimum, _maximum, _epmName);
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
+            farmers[farmerID].campaignsCount += 1;
             campaignCount++;
             emit CampaignCreated(farmerID, campaignCount, address(campaign));
         }
