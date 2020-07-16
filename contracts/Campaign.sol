@@ -7,7 +7,8 @@ contract Campaign is Ownable {
     string public description;
     uint[2] public duration;
     enum state {approval_needed, open, closed , full, canceled}
-    mapping(uint16 => Donation) donations;
+    mapping(uint => Donation) public donations;
+    uint donationNumber;
     uint[2] public limit; // [0] minimum, [1] maximum
     uint public amount;
     //EPM public epm;
@@ -16,6 +17,9 @@ contract Campaign is Ownable {
     uint campaingID;
     //Proof
     //[Prooftype?]
+    event DonationSent(uint donationID, uint paymentMethod);
+    event CampaignUpdated(uint campaingID);
+
 
     constructor (uint _campaignID, string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName) public {
         campaingID = _campaignID;
@@ -31,23 +35,30 @@ contract Campaign is Ownable {
     enum DonationState {donor_sent, donor_received, admin_received, admin_sent, farmer_received}
     struct Donation {
         string donor;
-        string amount;
+        uint amount;
         Paymentmethod paymentmethod;
         DonationState donationState;
-        //ID
+        uint id;
     }
 
     function getCampaignData()
     public
     view
-    returns(string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint _amount)
+    returns(string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint _amount, uint _campaignID)
     {
-        return (description, duration[0], duration[1], limit[0], limit[1], epm, amount);
+        return (description, duration[0], duration[1], limit[0], limit[1], epm, amount, campaingID);
     }
 
-
-
-
+    function receiveDonation(uint16 _amount, uint _paymentMethod)
+    public
+    {
+        Donation memory donation = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
+        amount += _amount;
+        donations[donationNumber] = donation;
+        donationNumber += 1;
+        emit DonationSent(donationNumber, _paymentMethod);
+        emit CampaignUpdated(campaingID);
+    }
 
 }
 
@@ -87,7 +98,7 @@ contract Campaign is Ownable {
         costs[1] = _maximumCosts;
         duration = _duration;
         acceptedTimeframe[0] = _begin;
-        acceptedTimeframe[1] = _end;   
+        acceptedTimeframe[1] = _end;
     }
 
 }

@@ -91,7 +91,7 @@ contract('Platform', accounts => {
         truffleAssert.eventEmitted(result0, 'CampaignCreated', (ev) => {
                 return (
                     ev.farmerID == 0
-                    && ev.campaignID == 1
+                    && ev.campaignID == 0
                     && ev.campaignAddress == resultCampaignAddress1
                  ); 
             
@@ -100,7 +100,7 @@ contract('Platform', accounts => {
         truffleAssert.eventEmitted(result1, 'CampaignCreated', (ev) => {
             return (
                 ev.farmerID == 0
-                && ev.campaignID == 2
+                && ev.campaignID == 1
                 && ev.campaignAddress == resultCampaignAddress2
              ); 
            });
@@ -122,6 +122,7 @@ contract('Platform', accounts => {
         let campaignData2 = await campaignInstance2.getCampaignData();
 
         assert.equal(
+            
             campaignData['_description'] == 'First campaign Description'
             && campaignData['_start'] == 100
             && campaignData['_end'] == 220
@@ -129,10 +130,12 @@ contract('Platform', accounts => {
             && campaignData['_maximum'] == 1200
             && campaignData['epmName'] == 'WildflowerMeadowEPM'
             && campaignData['_amount'] == 0
+            && campaignData['_campaignID'] == 0
         
             , true, "First campaign is wrong (unexpected data)");
 
-            assert.equal(
+        assert.equal(
+                
                 campaignData2['_description'] == 'Second Description'
                 && campaignData2['_start'] == 100
                 && campaignData2['_end'] == 220
@@ -140,9 +143,101 @@ contract('Platform', accounts => {
                 && campaignData2['_maximum'] == 1200
                 && campaignData2['epmName'] == 'WildflowerMeadowEPM'
                 && campaignData2['_amount'] == 0
+                && campaignData2['_campaignID'] == 1
             
                 , true, "Second campaign is wrong (unexpected data)");
 
     }); 
+
+    it ("Should correctly accept a donation", async() => {
+        var instance = await Platform.deployed();
+        let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1);
+        let resultCampaignAddress2 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 2);
+        let campaignInstance = await Campaign.at(resultCampaignAddress1);
+        let campaignInstance2 = await Campaign.at(resultCampaignAddress2);
+        
+        let campaignData = await campaignInstance.getCampaignData();
+
+        assert.equal(
+
+            campaignData['_description'] == 'First campaign Description'
+            && campaignData['_start'] == 100
+            && campaignData['_end'] == 220
+            && campaignData['_minimum'] == 10
+            && campaignData['_maximum'] == 1200
+            && campaignData['epmName'] == 'WildflowerMeadowEPM'
+            && campaignData['_amount'] == 0
+            && campaignData['_campaignID'] == 0
+
+        
+            , true, "First campaign is wrong (unexpected data)");
+
+        let campaignSendDonation = await campaignInstance.receiveDonation(100, 0);
+
+    truffleAssert.eventEmitted(campaignSendDonation, 'DonationSent', (ev) => {
+
+            return (
+                ev.donationID == 1,
+                ev.paymentMethod == 0
+             ); 
+        });
+
+    truffleAssert.eventEmitted(campaignSendDonation, 'CampaignUpdated', (ev) => {
+        
+            return (
+                ev.campaingID == 0
+             ); 
+        });
+    
+    let campaignDataUpdated = await campaignInstance.getCampaignData();
+
+    assert.equal(
+
+        campaignDataUpdated['_description'] == 'First campaign Description'
+        && campaignDataUpdated['_start'] == 100
+        && campaignDataUpdated['_end'] == 220
+        && campaignDataUpdated['_minimum'] == 10
+        && campaignDataUpdated['_maximum'] == 1200
+        && campaignDataUpdated['epmName'] == 'WildflowerMeadowEPM'
+        && campaignDataUpdated['_amount'] == 100
+        && campaignDataUpdated['_campaignID'] == 0
+
+    
+        , true, "Amount not updated or other data changed");
+    
+    let campaignSendDonation2 = await campaignInstance2.receiveDonation(150, 123);
+
+    truffleAssert.eventEmitted(campaignSendDonation2, 'DonationSent', (ev) => {
+    
+        return (
+            ev.donationID == 1,
+            ev.paymentMethod == 1
+             ); 
+        });
+    
+    truffleAssert.eventEmitted(campaignSendDonation2, 'CampaignUpdated', (ev) => {
+        
+        return (
+            ev.campaingID == 1
+            ); 
+        });
+    let campaignDataUpdated2 = await campaignInstance.getCampaignData();
+
+    assert.equal(
+                
+        campaignDataUpdated2['_description'] == 'Second Description'
+        && campaignDataUpdated2['_start'] == 100
+        && campaignDataUpdated2['_end'] == 220
+        && campaignDataUpdated2['_minimum'] == 10
+        && campaignDataUpdated2['_maximum'] == 1200
+        && campaignDataUpdated2['epmName'] == 'WildflowerMeadowEPM'
+        && campaignDataUpdated2['_amount'] == 0
+        && campaignDataUpdated2['_campaignID'] == 1
+    
+        , true, "Second campaign is wrong (unexpected data)");
+       
+    });
+
+  
 
 });

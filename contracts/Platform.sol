@@ -135,8 +135,8 @@ contract Platform is Ownable {
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
             farmers[farmerID].campaignsCount += 1;
-            campaignCount++;
             emit CampaignCreated(farmerID, campaignCount, address(campaign));
+            campaignCount++;
         }
 
     function getCampainAddressByFarmerIdAndCampaignId(uint16 farmerID, uint16 campaignID)
