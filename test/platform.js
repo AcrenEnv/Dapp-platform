@@ -155,7 +155,6 @@ contract('Platform', accounts => {
         let resultCampaignAddress2 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 2);
         let campaignInstance = await Campaign.at(resultCampaignAddress1);
         let campaignInstance2 = await Campaign.at(resultCampaignAddress2);
-        
         let campaignData = await campaignInstance.getCampaignData();
 
         assert.equal(
@@ -205,7 +204,7 @@ contract('Platform', accounts => {
     
         , true, "Amount not updated or other data changed");
     
-    let campaignSendDonation2 = await campaignInstance2.receiveDonation(150, 123);
+    let campaignSendDonation2 = await campaignInstance2.receiveDonation(150, 1);
 
     truffleAssert.eventEmitted(campaignSendDonation2, 'DonationSent', (ev) => {
     
@@ -221,7 +220,7 @@ contract('Platform', accounts => {
             ev.campaingID == 1
             ); 
         });
-    let campaignDataUpdated2 = await campaignInstance.getCampaignData();
+    let campaignDataUpdated2 = await campaignInstance2.getCampaignData();
 
     assert.equal(
                 
@@ -231,11 +230,52 @@ contract('Platform', accounts => {
         && campaignDataUpdated2['_minimum'] == 10
         && campaignDataUpdated2['_maximum'] == 1200
         && campaignDataUpdated2['epmName'] == 'WildflowerMeadowEPM'
-        && campaignDataUpdated2['_amount'] == 0
+        && campaignDataUpdated2['_amount'] == 150
         && campaignDataUpdated2['_campaignID'] == 1
     
         , true, "Second campaign is wrong (unexpected data)");
        
+    });
+
+    it("Should correctly obtain donation data and change the state of a donation", async() => {
+        var instance = await Platform.deployed();
+        let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1);
+        let campaignInstance = await Campaign.at(resultCampaignAddress1);
+        let donationData = await campaignInstance.getDonationData(0);
+        assert.equal(
+                
+            donationData['_donor'] == 'anonymous'
+            && donationData['_amount'] == 100
+            && donationData['_paymentmethod'] == 0
+            && donationData['_donationstate'] == 0
+            && donationData['_id'] == 0
+           
+        
+            , true, "First Donation data not correct");
+
+        await campaignInstance.receiveDonation(123, 1);
+        let donationData2 = await campaignInstance.getDonationData(1);
+        assert.equal(
+                
+            donationData2['_donor'] == 'anonymous'
+            && donationData2['_amount'] == 123
+            && donationData2['_paymentmethod'] == 1
+            && donationData2['_donationstate'] == 0
+            && donationData2['_id'] == 1
+           
+        
+            , true, "Second Donation data not correct");
+
+        await campaignInstance.changeDonationState(1,2);
+        donationData2 = await campaignInstance.getDonationData(1);
+        assert.equal(      
+            donationData2['_donor'] == 'anonymous'
+            && donationData2['_amount'] == 123
+            && donationData2['_paymentmethod'] == 1
+            && donationData2['_donationstate'] == 2
+            && donationData2['_id'] == 1
+            , true, "after state change: Second Donation data not correct after");
+        
     });
 
   

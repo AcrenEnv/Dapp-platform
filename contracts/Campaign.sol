@@ -52,12 +52,34 @@ contract Campaign is Ownable {
     function receiveDonation(uint16 _amount, uint _paymentMethod)
     public
     {
-        Donation memory donation = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
         amount += _amount;
-        donations[donationNumber] = donation;
-        donationNumber += 1;
+        donations[donationNumber] = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
         emit DonationSent(donationNumber, _paymentMethod);
         emit CampaignUpdated(campaingID);
+        donationNumber += 1;
+
+    }
+
+    function changeDonationState(uint donationID, uint _newState)
+    public
+     // onlyOwner 
+    {
+        donations[donationID].donationState = DonationState(_newState);
+        emit CampaignUpdated(campaingID);
+    }
+
+    function getDonationData(uint donationID)
+    public
+    view
+    returns (string memory _donor, uint _amount, Paymentmethod _paymentmethod, DonationState _donationstate, uint _id)
+    {
+                return (
+                    donations[donationID].donor,
+                    donations[donationID].amount,
+                    donations[donationID].paymentmethod,
+                    donations[donationID].donationState,
+                    donations[donationID].id);
+
     }
 
 }
