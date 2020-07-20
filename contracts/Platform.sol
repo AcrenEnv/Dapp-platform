@@ -132,6 +132,7 @@ contract Platform is Ownable {
         onlyOwner
         {
             Campaign campaign = new Campaign(campaignCount, _description, _start, _end, _minimum, _maximum, _epmName);
+            campaign.transferOwnership(msg.sender);
             campaigns.push(campaign);
             farmers[farmerID].campaigns.push(campaign);
             farmers[farmerID].campaignsCount += 1;

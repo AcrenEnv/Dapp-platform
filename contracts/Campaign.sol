@@ -51,6 +51,7 @@ contract Campaign is Ownable {
 
     function receiveDonation(uint16 _amount, uint _paymentMethod)
     public
+    //@todo: check if campaign is valid (time, amount, ...)
     {
         amount += _amount;
         donations[donationNumber] = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
@@ -62,7 +63,7 @@ contract Campaign is Ownable {
 
     function changeDonationState(uint donationID, uint _newState)
     public
-     // onlyOwner 
+    onlyOwner 
     {
         donations[donationID].donationState = DonationState(_newState);
         emit CampaignUpdated(campaingID);
