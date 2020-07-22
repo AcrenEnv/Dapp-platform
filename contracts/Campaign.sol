@@ -1,9 +1,12 @@
 pragma solidity >=0.4.21 <0.7.0;
 import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./NameRegistry.sol";
+import "./openzeppelin-solidity/contracts/math/SafeMath.sol";
 //SPDX-License-Identifier: MIT
 
 contract Campaign is Ownable {
+    using SafeMath for uint;
+
     string public description;
     uint[2] public duration;
     enum state {approval_needed, open, closed , full, canceled}
@@ -20,6 +23,11 @@ contract Campaign is Ownable {
     event DonationSent(uint donationID, uint paymentMethod);
     event CampaignUpdated(uint campaingID);
 
+    modifier validCampaign(uint donationAmount){
+        require(block.timestamp >= duration[0] && block.timestamp<=duration[1], "Campaign is not started or already over");
+        require(limit[1]<= SafeMath.add(donationAmount, amount), "Donation would exceed campaign limit ");
+        _;
+    }
 
     constructor (uint _campaignID, string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName) public {
         campaingID = _campaignID;
@@ -51,7 +59,7 @@ contract Campaign is Ownable {
 
     function receiveDonation(uint16 _amount, uint _paymentMethod)
     public
-    //@todo: check if campaign is valid (time, amount, ...)
+    validCampaign(_amount)
     {
         amount += _amount;
         donations[donationNumber] = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
@@ -63,7 +71,7 @@ contract Campaign is Ownable {
 
     function changeDonationState(uint donationID, uint _newState)
     public
-    onlyOwner 
+    onlyOwner
     {
         donations[donationID].donationState = DonationState(_newState);
         emit CampaignUpdated(campaingID);
