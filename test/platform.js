@@ -8,7 +8,9 @@ var Campaign = artifacts.require('Campaign');
 
 contract('Platform', accounts => {
 
-    let randomNonOwner = accounts[1];    
+    let randomNonOwner = accounts[1];
+    let ts = Math. round((new Date()). getTime() / 1000);
+ 
 
     it("should correctly add and get a farmers to plattform", async () => {
         let instance = await Platform.deployed();
@@ -77,7 +79,7 @@ contract('Platform', accounts => {
         await nameRegistryInstance.registerName("WildflowerMeadowEPM", wildflowerInstance.address);
         
         var instance = await Platform.deployed();
-        let start = 100;
+        let start = ts;
         let end = start + 120;
         let minimumDollar = 10;
         let maximumDollar = 1200;
@@ -124,8 +126,8 @@ contract('Platform', accounts => {
         assert.equal(
             
             campaignData['_description'] == 'First campaign Description'
-            && campaignData['_start'] == 100
-            && campaignData['_end'] == 220
+            && campaignData['_start'] == ts
+            && campaignData['_end'] == (ts+120)
             && campaignData['_minimum'] == 10
             && campaignData['_maximum'] == 1200
             && campaignData['epmName'] == 'WildflowerMeadowEPM'
@@ -137,8 +139,8 @@ contract('Platform', accounts => {
         assert.equal(
                 
                 campaignData2['_description'] == 'Second Description'
-                && campaignData2['_start'] == 100
-                && campaignData2['_end'] == 220
+                && campaignData2['_start'] == ts
+                && campaignData2['_end'] == (ts+120)
                 && campaignData2['_minimum'] == 10
                 && campaignData2['_maximum'] == 1200
                 && campaignData2['epmName'] == 'WildflowerMeadowEPM'
@@ -160,8 +162,8 @@ contract('Platform', accounts => {
         assert.equal(
 
             campaignData['_description'] == 'First campaign Description'
-            && campaignData['_start'] == 100
-            && campaignData['_end'] == 220
+            && campaignData['_start'] == ts
+            && campaignData['_end'] == (ts+120)
             && campaignData['_minimum'] == 10
             && campaignData['_maximum'] == 1200
             && campaignData['epmName'] == 'WildflowerMeadowEPM'
@@ -193,8 +195,8 @@ contract('Platform', accounts => {
     assert.equal(
 
         campaignDataUpdated['_description'] == 'First campaign Description'
-        && campaignDataUpdated['_start'] == 100
-        && campaignDataUpdated['_end'] == 220
+        && campaignDataUpdated['_start'] == ts
+        && campaignDataUpdated['_end'] == (ts+120)
         && campaignDataUpdated['_minimum'] == 10
         && campaignDataUpdated['_maximum'] == 1200
         && campaignDataUpdated['epmName'] == 'WildflowerMeadowEPM'
@@ -225,8 +227,8 @@ contract('Platform', accounts => {
     assert.equal(
                 
         campaignDataUpdated2['_description'] == 'Second Description'
-        && campaignDataUpdated2['_start'] == 100
-        && campaignDataUpdated2['_end'] == 220
+        && campaignDataUpdated2['_start'] == ts
+        && campaignDataUpdated2['_end'] == (ts+120)
         && campaignDataUpdated2['_minimum'] == 10
         && campaignDataUpdated2['_maximum'] == 1200
         && campaignDataUpdated2['epmName'] == 'WildflowerMeadowEPM'
