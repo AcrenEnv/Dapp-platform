@@ -25,7 +25,9 @@ contract Campaign is Ownable {
 
     modifier validCampaign(uint donationAmount){
         require(block.timestamp >= duration[0] && block.timestamp<=duration[1], "Campaign is not started or already over");
-        require(limit[1]<= SafeMath.add(donationAmount, amount), "Donation would exceed campaign limit ");
+        require(limit[1] >= SafeMath.add(donationAmount, amount), "Donation would exceed campaign limit ");
+        require(limit[0] <= donationAmount, "Donation amount to small");
+
         _;
     }
 
