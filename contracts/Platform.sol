@@ -9,15 +9,14 @@ import "./Campaign.sol";
 contract Platform is Ownable {
     enum FarmerState {unverfied, verified, restricted, blocked}
 
-    //enum paymentState {}
-    Campaign[] public campaigns; //@todo: standardize
+    Campaign[] public campaigns; 
     mapping(uint16 => Farmer) public farmers;
     uint16 numFarmers = 0;
     //EPM[..] public allowedEPMs
     //mapping(address=> Donor) public donors;
     //string public adminName;
 
-    uint campaignCount = 0;
+    uint campaignCount = 0; 
 
     event FarmerAdded(
         uint16 farmerID
@@ -184,13 +183,7 @@ contract Platform is Ownable {
     struct PaymentMethod{
 
     }*/
-/*
 
-    contract Campaign {
 
-        //all specific campaign data
-
-    }
-*/
 
 }
