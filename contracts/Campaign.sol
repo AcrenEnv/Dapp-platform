@@ -4,12 +4,15 @@ import "./NameRegistry.sol";
 import "./openzeppelin-solidity/contracts/math/SafeMath.sol";
 //SPDX-License-Identifier: MIT
 
+
+
 contract Campaign is Ownable {
     using SafeMath for uint;
 
     string public description;
     uint[2] public duration;
-    enum state {approval_needed, open, closed , full, canceled}
+    enum CampaignState {approval_needed, open, closed , full, canceled}
+    CampaignState state; //@todo: Add that the campaignstate can be updated and will automatically updated when closed/full and campain be canceled
     mapping(uint => Donation) public donations;
     uint donationNumber;
     uint[2] public limit; // [0] minimum, [1] maximum
@@ -39,6 +42,7 @@ contract Campaign is Ownable {
         limit[0] = _minimum;
         limit[1] = _maximum;
         epm = epmName;
+        state = CampaignState.approval_needed;
         //epm = EPM(nameRegistry.getContractDetails(epmName));
     }
     enum Paymentmethod {banktransfer, DAI, Ether}
@@ -54,9 +58,9 @@ contract Campaign is Ownable {
     function getCampaignData()
     public
     view
-    returns(string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint _amount, uint _campaignID)
+    returns(string memory _description, uint _start, uint _end, uint _minimum, uint _maximum, string memory epmName, uint _amount, uint _campaignID, CampaignState _state)
     {
-        return (description, duration[0], duration[1], limit[0], limit[1], epm, amount, campaingID);
+        return (description, duration[0], duration[1], limit[0], limit[1], epm, amount, campaingID, state);
     }
 
     function receiveDonation(uint16 _amount, uint _paymentMethod)
@@ -71,6 +75,14 @@ contract Campaign is Ownable {
 
     }
 
+    function changeCampaignState(uint _newState)
+    public
+    onlyOwner
+    {
+        state = CampaignState(_newState);
+        emit CampaignUpdated(campaingID);
+    }
+
     function changeDonationState(uint donationID, uint _newState)
     public
     onlyOwner
@@ -78,6 +90,7 @@ contract Campaign is Ownable {
         donations[donationID].donationState = DonationState(_newState);
         emit CampaignUpdated(campaingID);
     }
+
 
     function getDonationData(uint donationID)
     public
