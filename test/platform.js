@@ -280,6 +280,9 @@ contract('Platform', accounts => {
         
     });
 
+    it("Should correctly change the state of a campaign", async() => {
+
+    });
   
 
 });
