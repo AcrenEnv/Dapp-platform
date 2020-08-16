@@ -10,6 +10,12 @@ contract('Platform', accounts => {
 
     let randomNonOwner = accounts[1];
     let ts = Math. round((new Date()). getTime() / 1000);
+
+    const capaignApprovalNeeded = 0;
+    const campaignOpen = 1;
+    const campaignClosed = 2;
+    const campaignFull = 3;
+    const campaignCanceled = 4;
  
 
     it("should correctly add and get a farmers to plattform", async () => {
@@ -159,6 +165,7 @@ contract('Platform', accounts => {
         let campaignInstance2 = await Campaign.at(resultCampaignAddress2);
         let campaignData = await campaignInstance.getCampaignData();
 
+
         assert.equal(
 
             campaignData['_description'] == 'First campaign Description'
@@ -169,10 +176,16 @@ contract('Platform', accounts => {
             && campaignData['epmName'] == 'WildflowerMeadowEPM'
             && campaignData['_amount'] == 0
             && campaignData['_campaignID'] == 0
+            && campaignData['_state'] == 0
 
         
             , true, "First campaign is wrong (unexpected data)");
 
+        await truffleAssert.reverts(campaignInstance.receiveDonation(100, 0));
+
+        await campaignInstance.changeCampaignState(campaignOpen);
+        await campaignInstance2.changeCampaignState(campaignOpen);
+    
         let campaignSendDonation = await campaignInstance.receiveDonation(100, 0);
 
     truffleAssert.eventEmitted(campaignSendDonation, 'DonationSent', (ev) => {
@@ -202,6 +215,8 @@ contract('Platform', accounts => {
         && campaignDataUpdated['epmName'] == 'WildflowerMeadowEPM'
         && campaignDataUpdated['_amount'] == 100
         && campaignDataUpdated['_campaignID'] == 0
+        && campaignDataUpdated['_state'] == 1
+
 
     
         , true, "Amount not updated or other data changed");
@@ -234,6 +249,8 @@ contract('Platform', accounts => {
         && campaignDataUpdated2['epmName'] == 'WildflowerMeadowEPM'
         && campaignDataUpdated2['_amount'] == 150
         && campaignDataUpdated2['_campaignID'] == 1
+        && campaignDataUpdated2['_state'] == 1
+
     
         , true, "Second campaign is wrong (unexpected data)");
        
@@ -281,7 +298,23 @@ contract('Platform', accounts => {
     });
 
     it("Should correctly change the state of a campaign", async() => {
+        
+        
+        var instance = await Platform.deployed();
+        let resultCampaignAddress1 = await instance.getCampainAddressByFarmerIdAndCampaignId(0, 1);
+        let campaignInstance = await Campaign.at(resultCampaignAddress1);
+        let campaignData = await campaignInstance.getCampaignData();
 
+        /*assert.equal(campaignData["_state"] == 0, true, "Campaign state is after creation not equal to  'approval needed'");
+
+        await campaignInstance.changeCampaignState(campaignOpen);
+        campaignData = await campaignInstance.getCampaignData();
+
+        assert.equal(campaignData["_state"] == campaignOpen, true, "Campaign state is after approval not equal to  'open'");
+        
+*/
+        //@Todo: set campaign closed -> check if closed; sent donation until full -> check if set to full; set to canceled
+        //check if donation can be send to closed/full/canceled
     });
   
 

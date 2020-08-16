@@ -30,7 +30,7 @@ contract Campaign is Ownable {
         require(block.timestamp >= duration[0] && block.timestamp<=duration[1], "Campaign is not started or already over");
         require(limit[1] >= SafeMath.add(donationAmount, amount), "Donation would exceed campaign limit ");
         require(limit[0] <= donationAmount, "Donation amount to small");
-
+        require(state == CampaignState.open, "Campaign is not open for donations");
         _;
     }
 
@@ -69,6 +69,7 @@ contract Campaign is Ownable {
     {
         amount += _amount;
         donations[donationNumber] = Donation("anonymous", _amount, Paymentmethod(_paymentMethod), DonationState.donor_sent, donationNumber);
+        if(amount == limit[1]) {state = CampaignState.full;}
         emit DonationSent(donationNumber, _paymentMethod);
         emit CampaignUpdated(campaingID);
         donationNumber += 1;
