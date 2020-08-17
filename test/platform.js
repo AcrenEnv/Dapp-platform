@@ -305,16 +305,30 @@ contract('Platform', accounts => {
         let campaignInstance = await Campaign.at(resultCampaignAddress1);
         let campaignData = await campaignInstance.getCampaignData();
 
-        /*assert.equal(campaignData["_state"] == 0, true, "Campaign state is after creation not equal to  'approval needed'");
+        //Check if campaign is open
+        assert.equal(campaignData["_state"] == campaignOpen, true, "Campaign state is equal to  'open'");
 
-        await campaignInstance.changeCampaignState(campaignOpen);
+        //Sending transaction to set campaign to "full"
+        let amountToFull = campaignData["_maximum"]-campaignData["_amount"];
+        await campaignInstance.receiveDonation(amountToFull, 1);
         campaignData = await campaignInstance.getCampaignData();
+        assert.equal(campaignData["_state"] == campaignFull, true, "Campaign state is equal to  'full'");
+        await truffleAssert.reverts(campaignInstance.receiveDonation(1, 1));
 
-        assert.equal(campaignData["_state"] == campaignOpen, true, "Campaign state is after approval not equal to  'open'");
-        
-*/
-        //@Todo: set campaign closed -> check if closed; sent donation until full -> check if set to full; set to canceled
-        //check if donation can be send to closed/full/canceled
+
+        //Changing state to closed and sending transaction to closed campaign
+        await campaignInstance.changeCampaignState(campaignClosed);
+        campaignData = await campaignInstance.getCampaignData();
+        assert.equal(campaignData["_state"] == campaignClosed, true, "Campaign state is after closed not equal to  'closed'");
+        await truffleAssert.reverts(campaignInstance.receiveDonation(123, 1));
+
+        //changing state to canceled and sending transaction to canceled campaign
+
+        await campaignInstance.changeCampaignState(campaignCanceled);
+        campaignData = await campaignInstance.getCampaignData();
+        assert.equal(campaignData["_state"] == campaignCanceled, true, "Campaign state is after canceled not equal to  'canceled'");
+        await truffleAssert.reverts(campaignInstance.receiveDonation(123, 1));
+
     });
   
 
