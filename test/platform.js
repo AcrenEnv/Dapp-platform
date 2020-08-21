@@ -18,7 +18,7 @@ contract('Platform', accounts => {
     const campaignCanceled = 4;
  
 
-    it("should correctly add and get a farmers to plattform", async () => {
+    it("should correctly add and get a farmer to plattform", async () => {
         let instance = await Platform.deployed();
         let result0 = await instance.addFarmer("TestFarmer", "TestDescription", "11111100000");
         let result1 = await instance.addFarmer("TestFarmer2", "TestDescription2", "11111100000");
@@ -331,5 +331,6 @@ contract('Platform', accounts => {
 
     });
   
+    //@todo: Add authentication framework for token
 
 });
