@@ -3,6 +3,7 @@ import "./openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 import "./Campaign.sol";
 
+//@todo: add that each Donor (accessible through  his eth address) has account data (amount of donations etc.)
 
 //SPDX-License-Identifier: MIT
 
@@ -39,6 +40,25 @@ contract Platform is Ownable {
         address campaignAddress
     );
 
+    //@todo: PaymentMethod, DonationState, Donation and Donor are used in Platform and Campaign - should be moved to library or mother class
+    enum Paymentmethod {banktransfer, DAI, Ether}
+
+    enum DonationState {donor_sent, donor_received, admin_received, admin_sent, farmer_received}
+    struct Donation {
+        string donor;
+        uint amount;
+        Paymentmethod paymentmethod;
+        DonationState donationState;
+        uint id;
+    }
+
+    struct Donor {
+        uint256 amountDonated;
+        string username; // ipfs
+        mapping(uint => Donation) donations;
+        uint donationNumber;        //string bankAccount;
+        //address ethAddress;
+    }
 
     constructor (/*string memory _adminName*/) public {
         //adminName = _adminName;
@@ -167,13 +187,8 @@ contract Platform is Ownable {
 
 
 
-    /*struct Donor {
-        uint256 amount;
-        string contactData; // ipfs
-        string bankAccount;
-        address ethAddress;
-    }
-    struct Donation  {
+
+    /*struct Donation  {
         uint256 amount;
         uint256 fee;
 
